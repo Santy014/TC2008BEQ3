@@ -1,2 +1,15 @@
 fileFormatVersion: 2
 guid: 46ac63659540b57458df7d67e0884e4c
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - firePrefab: {fileID: 8829451551789304542, guid: 8206b722d11501a449d6a278cca2adfa, type: 3}
+  - smokePrefab: {fileID: 3319608728662486659, guid: ecad917932b04754ca77ddba10590332, type: 3}
+  - poiHiddenPrefab: {fileID: 8750207385780340736, guid: d20a3b91197f3d3408b04cfac3ea9743, type: 3}
+  - poiVictimPrefab: {fileID: 1671217829879710337, guid: a257d3ea627a3cb4ba8804ff3c020e93, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

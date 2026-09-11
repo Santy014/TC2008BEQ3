@@ -132,3 +132,15 @@ InitTestScene*.unity*
 /Assets/YughuesFreeConcreteMaterials/
 /Assets/YughuesFreeConcreteMaterials.meta
 .vscode/
+
+python/__pycache__/
+**/__pycache__/
+*.pyc
+
+/Assets/PyroParticles/
+/Assets/PyroParticles.meta
+/Assets/TextMesh Pro/
+/Assets/TextMesh Pro.meta
+/Assets/Vefects/
+/Assets/Vefects.meta
+/Assets/Scenes/Jucho/
