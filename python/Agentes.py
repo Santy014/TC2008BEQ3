@@ -1,4 +1,5 @@
 import heapq
+import random 
 
 class Pathfinder:
     @staticmethod
@@ -66,13 +67,14 @@ class Pathfinder:
         return path
 
 class Agent:
-    def __init__(self, id, start_pos):
+    def __init__(self, id, start_pos, modo="inteligente"):
         self.id = id
         self.pos = start_pos
         self.ap = 4
         self.saved_ap = 0
         self.carrying_victim = False
         self.is_knocked_down = False
+        self.modo = modo # <-- Almacenamos el modo (inteligente o aleatorio)
         
     def reset_turn(self):
         total_ap = self.ap + self.saved_ap
@@ -95,6 +97,87 @@ class Agent:
                 self.current_ap -= 1
                 return True
         return False
+
+    # Nnuevo enrutador para el turno principal
+    def execute_turn(self, game):
+        """Llama a la estrategia correspondiente según el modo del agente."""
+        if self.modo == "aleatorio":
+            self.execute_strategy_random(game)
+        else:
+            self.execute_strategy_smart(game)
+
+    def execute_strategy_random(self, game):
+        """ESTRATEGIA ALEATORIA: El agente toma decisiones al azar respetando AP y obstáculos."""
+        print(f"  [🎲] Agente {self.id} inicia en {self.pos} con {self.current_ap} AP (Modo Aleatorio).")
+        
+        while self.current_ap > 0:
+            directions = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+            random.shuffle(directions) # Aleatoriza el orden de evaluación de las casillas vecinas
+            moved_or_acted = False
+            
+            for dx, dy in directions:
+                next_step = (self.pos[0] + dx, self.pos[1] + dy)
+                
+                # 1. Validar límites del tablero
+                if not (0 <= next_step[0] <= game.board.width + 1 and 0 <= next_step[1] <= game.board.height + 1):
+                    continue
+                
+                # 2. Interacción con Muros y Puertas
+                edge_key = game.board._get_edge_key(self.pos, next_step)
+                if edge_key in game.board.boundaries:
+                    boundary = game.board.boundaries[edge_key]
+                    
+                    if boundary.type == "wall" and boundary.hp > 0:
+                        if self.current_ap >= 2:
+                            game.board.interact_with_boundary(self.pos, next_step, action="damage")
+                            self.current_ap -= 2
+                            print(f"    -> Hachazo en muro hacia {next_step}. (HP: {boundary.hp}, AP: {self.current_ap})")
+                            moved_or_acted = True
+                            break
+                        continue # No tiene AP para romperlo, intenta otra dirección
+                        
+                    elif boundary.type == "door" and boundary.hp > 0 and not boundary.is_open:
+                        if self.current_ap >= 1:
+                            boundary.is_open = True
+                            self.current_ap -= 1
+                            print(f"    -> Abrió puerta hacia {next_step}. (AP: {self.current_ap})")
+                            moved_or_acted = True
+                            break
+                        continue # No tiene AP para abrirla
+                
+                # 3. Interacción con el Fuego
+                state = game.fire_manager.get_state(next_step)
+                if state == 2:
+                    if self.current_ap >= 2:
+                        self.extinguish(next_step, game.fire_manager)
+                        print(f"    -> Apagó fuego en {next_step}. (AP: {self.current_ap})")
+                        moved_or_acted = True
+                        break
+                    continue # Es fuego y no puede apagarlo, no puede caminar ahí
+                
+                # 4. Movimiento hacia casilla válida (Vacía o con Humo)
+                move_cost = 2 if self.carrying_victim else 1
+                if self.current_ap >= move_cost:
+                    self.current_ap -= move_cost
+                    self.pos = next_step
+                    print(f"    -> Movimiento a {next_step}. (AP: {self.current_ap})")
+                    
+                    # REVELACIÓN MID-TURN Y PREVENCIÓN DE SUICIDIO
+                    was_carrying = self.carrying_victim
+                    game.check_poi_reveal(self)
+                    game.check_rescues(self)
+                    
+                    if was_carrying and not self.carrying_victim:
+                        print(f"    -> ¡Dejó a la víctima! Terminando turno para reorganizarse.")
+                        break
+                        
+                    moved_or_acted = True
+                    break # Rompe el ciclo for para iniciar una nueva acción con sus AP restantes
+            
+            # Si el for termina sin haber hecho NADA (atrapado o sin AP para las opciones disponibles)
+            if not moved_or_acted:
+                print(f"    -> Atrapado o sin AP suficiente para acciones válidas. Guardando AP.")
+                break
 
     def execute_strategy_smart(self, game):
         """ESTRATEGIA INTELIGENTE AVANZADA: Anti-enjambre, Fuego y Uso de Hacha."""

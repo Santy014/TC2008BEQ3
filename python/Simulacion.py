@@ -5,10 +5,11 @@ from Fuego import FireManager
 from Agentes import Agent
 
 class GameManager:
-    def __init__(self, board_width=8, board_height=6):
+    def __init__(self, board_width=8, board_height=6, modo="inteligente"):
         # Inicializamos los sistemas base
         self.board = Board(board_width, board_height)
         self.fire_manager = FireManager(self.board)
+        self.modo = modo # Guardamos el modo seleccionado
         
         self.agents = []
         self.turn_count = 0
@@ -31,7 +32,8 @@ class GameManager:
         # 1. Colocar 6 agentes afuera del edificio (esparcidos en las 4 entradas)
         spawn_points = [(0, 3), (9, 4), (6, 0), (3, 7), (0, 3), (9, 4)]
         for i in range(6):
-            self.agents.append(Agent(id=i+1, start_pos=spawn_points[i])) 
+            # Transmitimos el modo configurado al agente
+            self.agents.append(Agent(id=i+1, start_pos=spawn_points[i], modo=self.modo)) 
             
         # 2. Setup Inicial del mapa
         # ---MUROS EXTERIORES ---
@@ -184,10 +186,9 @@ class GameManager:
             print(f"\nTurno de Agente {agent.id}")
             agent.reset_turn()
             
-            # ACTIVAR ESTRATEGIA:
-            agent.execute_strategy_smart(self)
+            # ACTIVAR ESTRATEGIA (Usa el enrutador que evalúa si es aleatorio o inteligente):
+            agent.execute_turn(self)
              
-            
             # Checkeos de estado pos-movimiento
             self.check_poi_reveal(agent)
             self.check_rescues(agent)
@@ -234,9 +235,10 @@ class GameManager:
         print(f"Víctimas [Rescatadas: {self.victims_rescued}/7 | Perdidas: {self.victims_lost}/4]")
         print(f"Daño Estructural: {self.structural_damage}/24\n")
 
-# Para probar rápidamente:
+# Para probar rápidamente en la terminal de Python:
 if __name__ == "__main__":
-    game = GameManager()
+    # Puedes cambiar "aleatorio" por "inteligente" para alternar la lógica
+    game = GameManager(modo="aleatorio")
     game.setup_game()
     print("ESTADO INICIAL:")
     game.render_console()
