@@ -51,7 +51,11 @@ public class WebClientFlashPoint : MonoBehaviour
     public float gridScale = 2.0f;
     [Tooltip("Coordenada XYZ real en Unity donde se ubica la casilla (0,0) lógica")]
     public Vector3 gridOrigin = Vector3.zero;
-    
+    public float velocidad = 3f;
+
+
+    private bool primerTurno = true;
+    private Vector3[] destinos;
     [Header("Bomberos (Arrastrar desde la Jerarquía)")]
     public GameObject[] firefighterModels;
     
@@ -63,11 +67,33 @@ public class WebClientFlashPoint : MonoBehaviour
 
     private List<GameObject> spawnedEnvironment = new List<GameObject>();
 
+    void Start() 
+    {
+    destinos = new Vector3[firefighterModels.Length];
+    
+    for (int i = 0; i < firefighterModels.Length; i++) 
+        {
+            if (firefighterModels[i] == null)
+            {
+             continue;   
+            }
+        destinos[i] = firefighterModels[i].transform.position;   
+        }
+    }
+    
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
             StartCoroutine(RequestNextTurn());
+        }
+            for (int i = 0; i < firefighterModels.Length; i++) 
+        {
+            if (firefighterModels[i] == null)
+            {
+             continue;   
+            }
+        firefighterModels[i].transform.position = Vector3.MoveTowards(firefighterModels[i].transform.position, destinos[i], velocidad * Time.deltaTime);
         }
     }
 
@@ -98,7 +124,7 @@ public class WebClientFlashPoint : MonoBehaviour
     {
         // 1. Mover a los bomberos
         if (state.agents != null)
-        {
+        {   
             foreach (AgentData agent in state.agents)
             {
                 int index = agent.id - 1; 
@@ -107,11 +133,16 @@ public class WebClientFlashPoint : MonoBehaviour
                     if (firefighterModels[index] != null)
                     {
                         // Se suma el gridOrigin para compensar la posición real de la casa
-                        Vector3 newPos = gridOrigin + new Vector3(agent.x * gridScale, 0, agent.y * gridScale);
-                        firefighterModels[index].transform.position = newPos;
+                        destinos[index] = gridOrigin + new Vector3(agent.x * gridScale, 0, agent.y * gridScale);
+                        if (primerTurno) 
+                        {
+                            firefighterModels[index].transform.position = destinos[index];
+                        }
                     }
                 }
+               
             }
+            primerTurno = false;
         }
 
         // 2. Limpiar el entorno del turno anterior
