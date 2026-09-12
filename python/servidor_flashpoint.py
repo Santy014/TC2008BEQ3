@@ -62,7 +62,8 @@ class Server(BaseHTTPRequestHandler):
             "victims_lost": game.victims_lost,
             "agents": [],
             "fires": [],
-            "pois": []
+            "pois": [],
+            "damages": []
         }
         
         # 1. Empaquetar Agentes
@@ -72,9 +73,11 @@ class Server(BaseHTTPRequestHandler):
                 "x": agent.pos[0],
                 "y": agent.pos[1],
                 "carrying_victim": agent.carrying_victim,
-                "is_knocked_down": agent.is_knocked_down
+                "is_knocked_down": agent.is_knocked_down,
+                "current_ap": getattr(agent, "current_ap", 0),
+                "saved_ap": agent.saved_ap
             })
-            
+        
         # 2. Empaquetar Fuego/Humo
         for pos, f_state in game.fire_manager.cells.items():
             if f_state > 0: # Solo enviamos celdas que no estén vacías
@@ -92,7 +95,17 @@ class Server(BaseHTTPRequestHandler):
                 "revealed": poi["revealed"],
                 "type": poi["type"]
             })
-            
+
+        # 4. Empaquetar muros y puertas dañados
+        for (pos1, pos2), b in game.board.boundaries.items():
+            hp_inicial = 2 if b.type == "wall" else 1
+            if b.hp < hp_inicial:
+                state["damages"].append({
+                    "x1": pos1[0], "y1": pos1[1],
+                    "x2": pos2[0], "y2": pos2[1],
+                    "type": b.type,
+                    "destroyed": b.hp <= 0
+                })
         return state
 
 def run(server_class=HTTPServer, handler_class=Server, port=8585):

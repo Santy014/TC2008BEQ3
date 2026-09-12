@@ -19,7 +19,7 @@ class GameManager:
         self.victims_lost = 0
         self.structural_damage = 0  # Max 24
         
-        # Puntos de Interés (10 víctimas, 5 falsas alarmas)
+        # Puntos de Interes (10 victimas, 5 falsas alarmas)
         self.poi_pool = ["Victim"] * 10 + ["FalseAlarm"] * 5
         random.shuffle(self.poi_pool)
         self.active_pois = {}  # {(x, y): "type", "revealed"}
@@ -100,29 +100,29 @@ class GameManager:
                 del self.active_pois[agent.pos] # Se descarta
             else:
                 print(f"Agente {agent.id} encontro una VICTIMA en {agent.pos}!")
-                # Si el agente tiene las manos libres, la carga automáticamente
+                # Si el agente tiene las manos libres, la carga automaticamente
                 if not agent.carrying_victim:
                     agent.carrying_victim = True
-                    print(f"  -> ¡Agente {agent.id} ha cargado a la víctima en su espalda!")
+                    print(f"  -> Agente {agent.id} ha cargado a la victima en su espalda!")
                     del self.active_pois[agent.pos]
 
     def check_rescues(self, agent):
-        """Verifica si el agente salió de la casa con una víctima para rescatarla."""
+        """Verifica si el agente salio de la casa con una victima para rescatarla."""
         if agent.carrying_victim:
-            # Si está en el perímetro exterior (X <= 0 o >= 9, Y <= 0 o >= 7)
+            # Si esta en el perimetro exterior (X <= 0 o >= 9, Y <= 0 o >= 7)
             if not (1 <= agent.pos[0] <= self.board.width and 1 <= agent.pos[1] <= self.board.height):
                 agent.carrying_victim = False
                 self.victims_rescued += 1
-                print(f"\n*** ¡EL AGENTE {agent.id} HA RESCATADO A UNA VÍCTIMA! (Total: {self.victims_rescued}/7) ***\n")
+                print(f"\n*** EL AGENTE {agent.id} HA RESCATADO A UNA VICTIMA! (Total: {self.victims_rescued}/7) ***\n")
 
     def check_fire_casualties(self):
-        """Verifica si el fuego alcanzó a alguna víctima o derribó a un agente (Knock Down)."""
+        """Verifica si el fuego alcanzo a alguna victima o derribo a un agente (Knock Down)."""
         pois_to_remove = []
         for pos, poi in self.active_pois.items():
             if self.fire_manager.get_state(pos) == 2: # Si hay fuego
                 if poi["type"] == "Victim":
                     self.victims_lost += 1
-                    print(f"¡Una víctima ha muerto en {pos}! Total perdidas: {self.victims_lost}")
+                    print(f"Una victima ha muerto en {pos}! Total perdidas: {self.victims_lost}")
                 pois_to_remove.append(pos)
                 
         for pos in pois_to_remove:
@@ -135,9 +135,9 @@ class GameManager:
                 if agent.carrying_victim:
                     agent.carrying_victim = False
                     self.victims_lost += 1
-                    print(f"¡Agente {agent.id} derribado! Perdió a la víctima que cargaba.")
+                    print(f"Agente {agent.id} derribado! Perdio a la victima que cargaba.")
                 
-                # Mover agente a la ambulancia MÁS CERCANA
+                # Mover agente a la ambulancia MAS CERCANA
                 best_pos = (0, 0)
                 best_dist = float('inf')
                 for safe_x, safe_y in [(0, 3), (9, 4), (6, 0), (3, 7)]:
@@ -150,31 +150,31 @@ class GameManager:
                 print(f"Agente {agent.id} derribado y llevado a la ambulancia en {best_pos}.")
 
     def check_win_loss(self):
-        """Verifica si la simulación ha terminado."""
-        # Calcular el daño estructural actual (Fichas de daño en muros)
-        daño_actual = 0
+        """Verifica si la simulacion ha terminado."""
+        # Calcular el dano estructural actual (Fichas de dano en muros)
+        dano_actual = 0
         for boundary in self.board.boundaries.values():
             if boundary.type == "wall":
-                daño_actual += (2 - boundary.hp)
-        self.structural_damage = daño_actual
+                dano_actual += (2 - boundary.hp)
+        self.structural_damage = dano_actual
 
         if self.victims_rescued >= 7:
             self.game_over = True
             self.win = True
-            print("¡VICTORIA! 7 Víctimas rescatadas.")
+            print("VICTORIA! 7 Victimas rescatadas.")
         
         elif self.victims_lost >= 4:
             self.game_over = True
             self.win = False
-            print("¡DERROTA! 4 Víctimas perdidas.")
+            print("DERROTA! 4 Victimas perdidas.")
             
         elif self.structural_damage >= 24:
             self.game_over = True
             self.win = False
-            print("¡DERROTA! El edificio ha colapsado (24 daños).")
+            print("DERROTA! El edificio ha colapsado (24 danos).")
 
     def play_turn(self):
-        """Ejecuta un ciclo completo de la simulación."""
+        """Ejecuta un ciclo completo de la simulacion."""
         if self.game_over: return
         
         self.turn_count += 1
@@ -186,7 +186,7 @@ class GameManager:
             print(f"\nTurno de Agente {agent.id}")
             agent.reset_turn()
             
-            # ACTIVAR ESTRATEGIA (Usa el enrutador que evalúa si es aleatorio o inteligente):
+            # ACTIVAR ESTRATEGIA (Usa el enrutador que evalua si es aleatorio o inteligente):
             agent.execute_turn(self)
              
             # Checkeos de estado pos-movimiento
@@ -195,7 +195,7 @@ class GameManager:
             
             agent.end_turn()
             
-            # 2. Fase de Fuego (Advance Fire) - Ocurre DESPUÉS de cada agente
+            # 2. Fase de Fuego (Advance Fire) - Ocurre DESPUES de cada agente
             self.fire_manager.propagate_turn()
             self.check_fire_casualties()
             
@@ -217,7 +217,7 @@ class GameManager:
         for y in range(1, height + 1):
             row = ""
             for x in range(1, width + 1):
-                char = "." # Vacío
+                char = "." # Vacio
                 
                 estado = self.fire_manager.get_state((x, y))
                 if estado == 1: char = "h" # Humo
@@ -232,12 +232,12 @@ class GameManager:
                 
                 row += char + " "
             print(row)
-        print(f"Víctimas [Rescatadas: {self.victims_rescued}/7 | Perdidas: {self.victims_lost}/4]")
-        print(f"Daño Estructural: {self.structural_damage}/24\n")
+        print(f"Victimas [Rescatadas: {self.victims_rescued}/7 | Perdidas: {self.victims_lost}/4]")
+        print(f"Dano Estructural: {self.structural_damage}/24\n")
 
-# Para probar rápidamente en la terminal de Python:
+# Para probar rapidamente en la terminal de Python:
 if __name__ == "__main__":
-    # Puedes cambiar "aleatorio" por "inteligente" para alternar la lógica
+    # Puedes cambiar "aleatorio" por "inteligente" para alternar la logica
     game = GameManager(modo="aleatorio")
     game.setup_game()
     print("ESTADO INICIAL:")
@@ -248,9 +248,9 @@ if __name__ == "__main__":
         game.play_turn()
         
     print("\n==========================================")
-    print("--- FIN DE LA SIMULACIÓN ---")
+    print("--- FIN DE LA SIMULACION ---")
     if game.win:
-        print(f"¡LOS BOMBEROS GANARON! {game.victims_rescued} víctimas rescatadas.")
+        print(f"LOS BOMBEROS GANARON! {game.victims_rescued} victimas rescatadas.")
     else:
-        print(f"DERROTA. Víctimas perdidas: {game.victims_lost}/4.")
+        print(f"DERROTA. Victimas perdidas: {game.victims_lost}/4.")
     print("==========================================")
